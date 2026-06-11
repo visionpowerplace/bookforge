@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BookForge — manuscript to print-ready book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;600;700&family=EB+Garamond:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBFAF7; --ink:#15161A; --indigo:#2F3A8F; --reg:#D6492F;
+    --hair:rgba(21,22,26,.16); --soft:#EFEDE7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper); color:var(--ink);
+    font-family:"EB Garamond",Georgia,serif; font-size:18px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1140px; margin:0 auto; padding:46px 28px 80px;
+    display:grid; grid-template-columns:1fr 1fr; gap:64px;}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr; gap:40px; padding-top:34px}}
+
+  /* ---- brand / left rail ---- */
+  .eyebrow{font-family:"DM Mono",monospace; font-size:12px; letter-spacing:.32em;
+    text-transform:uppercase; color:var(--indigo);}
+  h1{font-family:"Oswald",sans-serif; font-weight:700; text-transform:uppercase;
+    font-size:64px; line-height:.92; letter-spacing:.005em; margin:.18em 0 .12em;}
+  h1 .reg{color:var(--reg);}
+  .lede{font-size:20px; max-width:30ch; color:#2b2c31;}
+  .steps{list-style:none; padding:0; margin:30px 0 0; border-top:1px solid var(--hair);}
+  .steps li{display:flex; gap:14px; align-items:baseline; padding:13px 0;
+    border-bottom:1px solid var(--hair);}
+  .steps .n{font-family:"DM Mono",monospace; font-size:12px; color:var(--indigo);
+    min-width:26px; letter-spacing:.1em;}
+  .steps b{font-family:"Oswald",sans-serif; font-weight:600; text-transform:uppercase;
+    letter-spacing:.04em; font-size:15px;}
+  .steps span{display:block; font-size:16px; color:#494a50;}
+
+  /* ---- upload card ---- */
+  .card{background:#fff; border:1px solid var(--hair);
+    box-shadow:0 1px 0 rgba(21,22,26,.04), 0 22px 50px -36px rgba(21,22,26,.5);}
+  .card .pad{padding:30px 30px 26px;}
+
+  /* dropzone framed with crop marks (a trim box) */
+  .drop{position:relative; margin:6px; padding:38px 20px; text-align:center;
+    border:1.5px dashed var(--hair); background:var(--soft); cursor:pointer;
+    transition:border-color .18s, background .18s;}
+  .drop:hover,.drop.hot{border-color:var(--indigo); background:#fff;}
+  .drop:focus-visible{outline:3px solid var(--indigo); outline-offset:3px;}
+  .drop .mk{position:absolute; width:13px; height:13px; pointer-events:none;}
+  .drop .mk::before,.drop .mk::after{content:""; position:absolute; background:var(--ink);}
+  .drop .mk::before{width:13px; height:1.5px; top:0; left:0;}
+  .drop .mk::after{width:1.5px; height:13px; top:0; left:0;}
+  .drop .tl{top:-7px; left:-7px;} .drop .tr{top:-7px; right:-7px; transform:scaleX(-1);}
+  .drop .bl{bottom:-7px; left:-7px; transform:scaleY(-1);}
+  .drop .br{bottom:-7px; right:-7px; transform:scale(-1,-1);}
+  .drop .big{font-family:"Oswald",sans-serif; font-weight:600; text-transform:uppercase;
+    letter-spacing:.05em; font-size:19px;}
+  .drop .sub{font-family:"DM Mono",monospace; font-size:12px; letter-spacing:.06em;
+    color:#6a6b71; margin-top:6px;}
+  .drop.has-file .big{color:var(--indigo);}
+
+  /* spec strip echoes the live trim/bleed */
+  .spec{display:flex; justify-content:space-between; align-items:center;
+    font-family:"DM Mono",monospace; font-size:11.5px; letter-spacing:.08em;
+    color:#6a6b71; padding:9px 8px 2px; text-transform:uppercase;}
+  .spec .reg-dot{display:inline-block; width:8px; height:8px; border-radius:50%;
+    background:var(--reg); margin-right:7px; vertical-align:middle;}
+
+  /* form */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:13px 14px; margin-top:20px;}
+  .grid .full{grid-column:1/-1;}
+  label{display:block; font-family:"DM Mono",monospace; font-size:10.5px;
+    letter-spacing:.14em; text-transform:uppercase; color:#6a6b71; margin:0 0 5px;}
+  input[type=text],select{width:100%; font-family:"EB Garamond",serif; font-size:16px;
+    color:var(--ink); background:#fff; border:1px solid var(--hair); border-radius:0;
+    padding:9px 11px;}
+  input:focus,select:focus{outline:2px solid var(--indigo); outline-offset:0; border-color:var(--indigo);}
+  .opts{display:flex; gap:8px; margin-top:4px;}
+  .seg{flex:1;}
+  .seg input{position:absolute; opacity:0; pointer-events:none;}
+  .seg label{display:block; text-align:center; cursor:pointer; margin:0;
+    padding:9px 6px; border:1px solid var(--hair); font-family:"Oswald",sans-serif;
+    font-weight:500; font-size:13px; letter-spacing:.06em; color:#54555b;}
+  .seg input:checked + label{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .seg input:focus-visible + label{outline:2px solid var(--indigo); outline-offset:2px;}
+  .check{display:flex; align-items:center; gap:9px; margin-top:14px; cursor:pointer;}
+  .check input{width:17px; height:17px; accent-color:var(--indigo);}
+  .check span{font-size:15px; color:#494a50;}
+
+  .go{width:100%; margin-top:20px; padding:15px; border:none; cursor:pointer;
+    background:var(--indigo); color:#fff; font-family:"Oswald",sans-serif;
+    font-weight:600; text-transform:uppercase; letter-spacing:.09em; font-size:16px;
+    transition:background .15s;}
+  .go:hover{background:#27306f;} .go:disabled{opacity:.5; cursor:default;}
+  .go:focus-visible{outline:3px solid var(--reg); outline-offset:2px;}
+
+  /* status */
+  .status{margin-top:18px; display:none;}
+  .status.on{display:block;}
+  .bar{height:3px; background:var(--soft); overflow:hidden;}
+  .bar i{display:block; height:100%; width:40%; background:var(--indigo);
+    animation:slide 1.1s ease-in-out infinite;}
+  @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
+  @media(prefers-reduced-motion:reduce){.bar i{animation:none; width:100%}}
+  .stat-line{font-family:"DM Mono",monospace; font-size:12.5px; letter-spacing:.05em;
+    margin-top:10px; color:#494a50;}
+  .stat-line.err{color:var(--reg);}
+  .dl{display:none; margin-top:14px; width:100%; padding:15px; text-align:center;
+    background:var(--ink); color:#fff; text-decoration:none;
+    font-family:"Oswald",sans-serif; font-weight:600; text-transform:uppercase;
+    letter-spacing:.09em; font-size:16px;}
+  .dl.on{display:block;} .dl:hover{background:#000;}
+  .foot{font-family:"DM Mono",monospace; font-size:11px; letter-spacing:.06em;
+    color:#9a9b9f; margin-top:26px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- left rail -->
+  <section>
+    <div class="eyebrow">Manuscript&nbsp;→&nbsp;Print</div>
+    <h1>Book<span class="reg">forge</span></h1>
+    <p class="lede">Upload a Word manuscript. Get back a press-ready interior — typeset, paginated, and bound for the printer.</p>
+    <ol class="steps">
+      <li><span class="n">01</span><div><b>Structure read</b><span>Chapters, pull-quotes, and exercises detected from your .docx.</span></div></li>
+      <li><span class="n">02</span><div><b>Typeset &amp; paginated</b><span>Openers, running heads, contents, roman &amp; arabic folios.</span></div></li>
+      <li><span class="n">03</span><div><b>Print-ready PDF</b><span>Correct trim, 0.125&Prime; bleed, optional crop marks.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- upload card -->
+  <section>
+    <div class="card">
+      <div class="pad">
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose or drop a Word .docx file">
+          <span class="mk tl"></span><span class="mk tr"></span><span class="mk bl"></span><span class="mk br"></span>
+          <div class="big" id="dropBig">Drop your .docx here</div>
+          <div class="sub" id="dropSub">or click to choose — Word document, up to 25 MB</div>
+          <input type="file" id="file" accept=".docx" hidden>
+        </div>
+        <div class="spec"><span><span class="reg-dot"></span><span id="specTrim">6.000 × 9.000 in</span></span><span id="specBleed">bleed 0.125 · b&amp;w</span></div>
+
+        <div class="grid">
+          <div class="full"><label for="title">Book title</label><input type="text" id="title" placeholder="You Can Do It"></div>
+          <div class="full"><label for="subtitle">Subtitle</label><input type="text" id="subtitle" placeholder="A Journey From Doubt to Destiny"></div>
+          <div><label for="author">Author</label><input type="text" id="author" placeholder="Benjamin Beckley"></div>
+          <div><label for="year">Year</label><input type="text" id="year" placeholder="2026"></div>
+          <div><label for="isbn">ISBN</label><input type="text" id="isbn" placeholder="979-8-2480-3629-5"></div>
+          <div><label for="publisher">Publisher</label><input type="text" id="publisher" placeholder="Vision Power Publishers"></div>
+          <div class="full"><label for="epigraph">Epigraph (optional)</label><input type="text" id="epigraph" placeholder="No matter where you are…"></div>
+
+          <div>
+            <label>Interior</label>
+            <div class="opts">
+              <div class="seg"><input type="radio" name="mode" id="m-bw" value="bw" checked><label for="m-bw">B&amp;W</label></div>
+              <div class="seg"><input type="radio" name="mode" id="m-color" value="color"><label for="m-color">Color</label></div>
+            </div>
+          </div>
+          <div>
+            <label for="trim">Trim size</label>
+            <select id="trim">
+              <option value="6x9">6 × 9 in</option>
+              <option value="5.5x8.5">5.5 × 8.5 in</option>
+              <option value="5x8">5 × 8 in</option>
+              <option value="5.25x8">5.25 × 8 in</option>
+              <option value="8.5x11">8.5 × 11 in</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="crop"><span>Add crop marks (offset print). Leave off for a KDP-ready interior.</span></label>
+
+        <button class="go" id="go" disabled>Format my book</button>
+
+        <div class="status" id="status">
+          <div class="bar"><i></i></div>
+          <div class="stat-line" id="statLine">Queued…</div>
+        </div>
+        <a class="dl" id="dl" href="#">Download print-ready PDF</a>
+      </div>
+    </div>
+    <div class="foot">Interior only · cover wrap is a separate step · your file is processed for this render</div>
+  </section>
+</div>
+
+<script>
+const TRIMS={"6x9":[6,9],"5.5x8.5":[5.5,8.5],"5x8":[5,8],"5.25x8":[5.25,8],"8.5x11":[8.5,11]};
+const $=id=>document.getElementById(id);
+let chosen=null;
+
+function refreshSpec(){
+  const [w,h]=TRIMS[$("trim").value];
+  $("specTrim").textContent=`${w.toFixed(3)} × ${h.toFixed(3)} in`;
+  const mode=document.querySelector('input[name=mode]:checked').value;
+  $("specBleed").textContent=`bleed 0.125 · ${$("crop").checked?"crop marks":mode}`;
+}
+["trim","crop"].forEach(id=>$(id).addEventListener("change",refreshSpec));
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener("change",refreshSpec));
+refreshSpec();
+
+const drop=$("drop"), fileInput=$("file");
+drop.addEventListener("click",()=>fileInput.click());
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fileInput.click();}});
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("hot");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("hot");}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0]; if(f) setFile(f);});
+fileInput.addEventListener("change",e=>{const f=e.target.files[0]; if(f) setFile(f);});
+
+function setFile(f){
+  if(!f.name.toLowerCase().endsWith(".docx")){ $("dropSub").textContent="That isn’t a .docx — choose a Word document."; return; }
+  chosen=f; drop.classList.add("has-file");
+  $("dropBig").textContent=f.name;
+  $("dropSub").textContent=(f.size/1048576).toFixed(2)+" MB · ready";
+  $("go").disabled=false;
+  if(!$("title").value){ $("title").value=f.name.replace(/\.docx$/i,"").replace(/[_-]+/g," "); }
+}
+
+$("go").addEventListener("click",submit);
+async function submit(){
+  if(!chosen) return;
+  $("go").disabled=true; $("dl").classList.remove("on");
+  $("status").classList.add("on"); setStat("Uploading…",false);
+  const fd=new FormData();
+  fd.append("file",chosen);
+  ["title","subtitle","author","isbn","publisher","year","epigraph"].forEach(k=>fd.append(k,$(k).value));
+  fd.append("mode",document.querySelector('input[name=mode]:checked').value);
+  fd.append("trim",$("trim").value);
+  fd.append("crop_marks",$("crop").checked?"true":"false");
+  try{
+    const r=await fetch("/api/jobs",{method:"POST",body:fd});
+    const j=await r.json();
+    if(!r.ok){ setStat(j.detail||"Upload failed.",true); $("go").disabled=false; return; }
+    poll(j.id);
+  }catch(e){ setStat("Network error — try again.",true); $("go").disabled=false; }
+}
+
+const PHASES={queued:"Queued…",rendering:"Setting type & paginating…"};
+async function poll(id){
+  try{
+    const r=await fetch("/api/jobs/"+id);
+    const j=await r.json();
+    if(j.status==="done"){
+      setStat((j.message||"Done")+" — ready.",false);
+      $("status").classList.remove("on");
+      const dl=$("dl"); dl.href=j.download; dl.classList.add("on");
+      $("go").disabled=false; $("go").textContent="Format another";
+      return;
+    }
+    if(j.status==="error"){ setStat("Couldn’t format: "+(j.message||"unknown"),true);
+      $("status").classList.remove("on"); $("go").disabled=false; return; }
+    setStat(PHASES[j.status]||"Working…",false);
+    setTimeout(()=>poll(id),1200);
+  }catch(e){ setTimeout(()=>poll(id),1600); }
+}
+function setStat(t,err){ const l=$("statLine"); l.textContent=t; l.classList.toggle("err",!!err); }
+</script>
+</body>
+</html>

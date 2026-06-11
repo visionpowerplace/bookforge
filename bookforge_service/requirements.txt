@@ -1,0 +1,10 @@
+# --- formatting engine ---
+weasyprint==69.0
+python-docx==1.2.0
+pillow==12.1.1
+pypdf==5.9.0
+
+# --- web service ---
+fastapi==0.136.3
+uvicorn[standard]==0.49.0
+python-multipart==0.0.32
