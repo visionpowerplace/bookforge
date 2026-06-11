@@ -68,8 +68,10 @@ class JobManager:
             out_name = "book.pdf"
             out_path = self.store.output_path(job.id, out_name)
             book = build_book(docx_path, out_path, meta, theme, verbose=False)
-            self._set(job, status="done", out_file=out_name,
-                      message=f"{len(book.chapters)} chapters formatted")
+            msg = f"{len(book.chapters)} chapter(s) formatted"
+            if book.notes:
+                msg += f" — {book.notes}"
+            self._set(job, status="done", out_file=out_name, message=msg)
         except Exception as e:
             self._set(job, status="error",
                       message=f"{type(e).__name__}: {e}")

@@ -82,3 +82,19 @@ The code is structured so the two pieces you'd swap are isolated:
 - Renders take a few seconds to ~30s depending on chapter count and `color` mode (image
   generation dominates) — that's why it's a background job, not a blocking request.
 - Each `mode`/`trim`/`crop_marks` combination is a fresh render; nothing is cached yet.
+
+## Preparing a manuscript (what authors should know)
+
+The parser detects chapters from several cues, so most real `.docx` files work as-is —
+but it splits most reliably when each chapter title is one of:
+
+- a paragraph in Word's **Heading 1** style (Home → Styles → Heading 1), **or**
+- a short title line that **starts on a new page** (Insert → Page Break before it), **or**
+- a line beginning **"Chapter 3", "Part II", "Secret 5"**, etc.
+
+Other supported cues: ALL-CAPS or bold/centered title lines, and a larger font than the
+body. Action-step modules are any short line containing "action step"; pull-quotes are
+the Quote style or a standalone bold line; bullet/numbered lists use Word's list buttons.
+
+If **no** chapter cues are found, the whole manuscript is still formatted — as one
+continuous section — and the job message says so, rather than dropping the text.

@@ -16,6 +16,12 @@ class Para:
 
 
 @dataclass
+class Subhead:
+    """A section sub-heading within a chapter (bold title line, not a pull-quote)."""
+    text: str
+
+
+@dataclass
 class PullQuote:
     """A highlighted callout pulled out of the running text."""
     text: str
@@ -40,7 +46,8 @@ class ActionStep:
 class Chapter:
     number: int
     title: str
-    blocks: List[object] = field(default_factory=list)   # Para | PullQuote | ListBlock | ActionStep
+    subtitle: str = ""                  # optional deck shown under the opener title
+    blocks: List[object] = field(default_factory=list)   # Para | PullQuote | ListBlock | ActionStep | Subhead
     image: Optional[str] = None        # path to chapter-opener art
     image_prompt: str = ""             # the brief used to generate/select the art
 
@@ -89,3 +96,5 @@ class Book:
     front_matter: List[FrontMatterPiece] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     closing: Optional[FrontMatterPiece] = None   # e.g. "A Final Word"
+    back_matter: List[FrontMatterPiece] = field(default_factory=list)  # extra: endnotes, etc.
+    notes: str = ""                              # parser diagnostics (e.g. structure fallback)

@@ -36,6 +36,8 @@ def build_book(docx_path, out_pdf, meta: BookMeta, theme: Theme,
         print(f"  parsed: {len(book.front_matter)} front-matter, "
               f"{len(book.chapters)} chapters, "
               f"closing={'yes' if book.closing else 'no'}")
+        if book.notes:
+            print(f"  note: {book.notes}")
 
     # chapter art (procedural here; swap generate_opener() for an image model)
     art_dir = art_dir or tempfile.mkdtemp(prefix="bf_art_")

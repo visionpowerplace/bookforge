@@ -80,7 +80,7 @@ em { font-style:italic; } strong { font-weight:700; }
 .toc h2::after { content:""; display:block; width:60pt; height:2pt; background:var(--accent);
   margin:10pt auto 0; }
 .toc ul { list-style:none; margin:0; padding:0; }
-.toc li { margin:0 0 13pt; display:flex; align-items:baseline; }
+.toc li { margin:0 0 10pt; display:flex; align-items:baseline; break-inside:avoid; }
 .toc .num { font-family:"BF Display"; font-weight:700; color:#fff; background:var(--accent);
   min-width:22pt; height:22pt; border-radius:5pt; display:inline-flex; align-items:center;
   justify-content:center; font-size:11pt; margin-right:12pt; }
@@ -113,10 +113,15 @@ em { font-style:italic; } strong { font-weight:700; }
   background:#fff; opacity:.85; margin:9pt auto 16pt; }
 .opener h1 { font-family:"BF Display"; font-weight:700; text-transform:uppercase;
   font-size:34pt; line-height:1.02; margin:0; }
+.opener .deck { font-family:"BF Body"; font-style:italic; font-size:13pt;
+  line-height:1.3; margin-top:12pt; color:rgba(255,255,255,.92); }
 
 /* ---- chapter body ---- */
 .chapter-body { break-before:page; }
 .chapter-body .run-title { string-set: chaptitle content(); height:0; overflow:hidden; }
+h3.subhead { font-family:"BF Display"; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; font-size:12.5pt; color:var(--accent);
+  margin:17pt 0 6pt; text-indent:0; break-after:avoid; }
 .pull-quote { font-family:"BF Display"; font-weight:600; text-transform:none;
   font-size:16.5pt; line-height:1.28; text-align:center; text-indent:0;
   margin:20pt .3in; color:var(--ink); }

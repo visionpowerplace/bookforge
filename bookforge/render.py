@@ -4,7 +4,7 @@ the page counter mid-document; build.py merges them. The body carries PDF
 bookmarks so build.py can read true chapter page numbers for the TOC.
 """
 import html
-from .model import Book, Para, PullQuote, ListBlock, ActionStep
+from .model import Book, Para, Subhead, PullQuote, ListBlock, ActionStep
 
 
 def _esc(s: str) -> str:
@@ -18,6 +18,9 @@ def _render_blocks(blocks, first_para_plain=True) -> str:
             cls = ' class="first"' if first else ""
             out.append(f"<p{cls}>{b.html}</p>")
             first = False
+        elif isinstance(b, Subhead):
+            out.append(f'<h3 class="subhead">{_esc(b.text)}</h3>')
+            first = True
         elif isinstance(b, PullQuote):
             out.append(f'<p class="pull-quote">{_esc(b.text)}</p>')
             first = True
@@ -45,24 +48,24 @@ def render_body_html(book: Book, css: str) -> str:
     P = []
     for ch in book.chapters:
         img = f'<img src="file://{ch.image}" alt="">' if ch.image else ""
+        deck = f'<div class="deck">{_esc(ch.subtitle)}</div>' if ch.subtitle else ""
         P.append(
             f'<section class="opener" id="{ch.anchor}" '
             f'style="bookmark-level:1; bookmark-label:\'{ch.anchor}\'">{img}'
             f'<div class="scrim"></div><div class="inner">'
             f'<div class="eyebrow">Chapter {ch.number:02d}</div>'
-            f'<h1>{_esc(ch.title)}</h1></div></section>')
+            f'<h1>{_esc(ch.title)}</h1>{deck}</div></section>')
         P.append('<section class="chapter-body">')
         P.append(f'<p class="run-title">{_esc(ch.title)}</p>')
         P.append(_render_blocks(ch.blocks))
         P.append('</section>')
 
-    if book.closing:
-        c = book.closing
-        P.append(f'<section class="closing" id="{c.anchor}" '
-                 f'style="bookmark-level:1; bookmark-label:\'{c.anchor}\'">')
-        P.append(f'<p class="run-title">{_esc(c.title)}</p>')
-        P.append(f'<h1>{_esc(c.title)}</h1>')
-        P.append(_render_blocks(c.blocks))
+    for piece in ([book.closing] if book.closing else []) + list(book.back_matter):
+        P.append(f'<section class="closing" id="{piece.anchor}" '
+                 f'style="bookmark-level:1; bookmark-label:\'{piece.anchor}\'">')
+        P.append(f'<p class="run-title">{_esc(piece.title)}</p>')
+        P.append(f'<h1>{_esc(piece.title)}</h1>')
+        P.append(_render_blocks(piece.blocks))
         P.append('</section>')
     return _doc(css, "".join(P))
 
@@ -119,6 +122,10 @@ def render_front_html(book: Book, css: str, page_of: dict) -> str:
         pg = page_of.get(book.closing.anchor, "")
         P.append(f'<li class="nonum"><a href="#{book.closing.anchor}" data-pg="{pg}">'
                  f'<span class="t">{_esc(book.closing.title)}</span></a></li>')
+    for piece in book.back_matter:
+        pg = page_of.get(piece.anchor, "")
+        P.append(f'<li class="nonum"><a href="#{piece.anchor}" data-pg="{pg}">'
+                 f'<span class="t">{_esc(piece.title)}</span></a></li>')
     P.append('</ul></nav>')
 
     # front-matter prose (roman folios continue from title page)
